@@ -1,0 +1,56 @@
+# Gradle files
+.gradle/
+.vscode/
+build/
+**/build/
+!gradle-wrapper.jar
+
+# Local configuration files
+local.properties
+*.iml
+
+# IDE files
+.idea/
+*.ipr
+*.iws
+
+# Keystore files
+*.jks
+*.keystore
+
+# Android Studio captures
+captures/
+
+# Log files
+*.log
+
+# Mac OS
+.DS_Store
+
+# Generated files
+gen/
+bin/
+out/
+
+# Crashlytics and Fabric files
+fabric.properties
+
+# Google Services
+google-services.json
+app/google-services.json
+
+# Fastlane metadata
+fastlane/report.xml
+fastlane/screenshots
+fastlane/test_output
+
+# Unit test reports
+test-results/
+*.xml
+
+# Kotlin
+*.kts~
+
+# Firebase
+firebase-debug.log
+
