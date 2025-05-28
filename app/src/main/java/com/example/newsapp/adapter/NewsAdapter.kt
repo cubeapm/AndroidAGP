@@ -10,7 +10,8 @@ import com.example.newsapp.databinding.ItemNewsBinding
 import com.example.newsapp.model.NewsArticle
 
 class NewsAdapter(
-    private val onItemClick: (NewsArticle) -> Unit
+    private val onItemClick: (NewsArticle) -> Unit,
+    private val onFavoriteClick: (NewsArticle) -> Unit
 ) : ListAdapter<NewsArticle, NewsAdapter.NewsViewHolder>(NewsDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NewsViewHolder {
@@ -19,7 +20,7 @@ class NewsAdapter(
             parent,
             false
         )
-        return NewsViewHolder(binding, onItemClick)
+        return NewsViewHolder(binding, onItemClick, onFavoriteClick)
     }
 
     override fun onBindViewHolder(holder: NewsViewHolder, position: Int) {
@@ -28,7 +29,8 @@ class NewsAdapter(
 
     class NewsViewHolder(
         private val binding: ItemNewsBinding,
-        private val onItemClick: (NewsArticle) -> Unit
+        private val onItemClick: (NewsArticle) -> Unit,
+        private val onFavoriteClick: (NewsArticle) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(article: NewsArticle) {
@@ -37,6 +39,7 @@ class NewsAdapter(
             binding.descriptionTextView.text = article.description
             binding.sourceTextView.text = article.source.name
             binding.dateTextView.text = article.publishedAt
+            binding.favoriteButton.setOnClickListener { onFavoriteClick(article) }
 
             article.urlToImage?.let { imageUrl ->
                 Glide.with(binding.root.context)
