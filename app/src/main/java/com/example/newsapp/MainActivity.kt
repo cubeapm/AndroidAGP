@@ -3,56 +3,59 @@ package com.example.newsapp
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.newsapp.adapter.NewsAdapter
 import com.example.newsapp.databinding.ActivityMainBinding
-import com.example.newsapp.db.NewsDatabase
-import com.example.newsapp.model.FavoriteNews
 import com.example.newsapp.viewmodel.NewsViewModel
 import com.newrelic.agent.android.NewRelic
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: NewsViewModel
     private lateinit var adapter: NewsAdapter
-    private lateinit var database: NewsDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        database = NewsDatabase(this)
         setupViewModel()
         setupRecyclerView()
         setupSwipeRefresh()
+        setupHeaderButtons()
         observeViewModel()
         loadNews()
         NewRelic.setInteractionName("Main Screen")
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        return true
+    private fun setupHeaderButtons() {
+        binding.favoriteButton.setOnClickListener {
+            // TODO: Implement favorites navigation
+            Toast.makeText(this, "Favorites feature coming soon!", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.crashButton.setOnClickListener {
+            simulateCrash()
+        }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_favorites -> {
-                startActivity(Intent(this, FavoritesActivity::class.java))
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
+    private fun simulateCrash() {
+        try {
+            val interactionId = NewRelic.startInteraction("CrashButtonClicked")
+            Log.d("NewRelic", "Started Crash interaction with ID: $interactionId")
+            // Simulate a crash by throwing an unhandled exception
+            Thread.sleep(1000)
+            NewRelic.endInteraction(interactionId)
+            Log.d("NewRelic", "Ended Crash interaction with ID: $interactionId")
+            throw RuntimeException("Simulated crash for testing purposes")
+        } catch (e: Exception) {
+            Log.e("NewRelic", "Error tracking Crash interaction", e)
+            throw e
         }
     }
 
@@ -61,39 +64,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        adapter = NewsAdapter(
-            onItemClick = { article ->
-                // Open article in browser
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(article.url))
-                startActivity(intent)
-            },
-            onFavoriteClick = { article ->
-                lifecycleScope.launch {
-                    withContext(Dispatchers.IO) {
-                        val existingFavorite = database.getFavoriteByUrl(article.url)
-                        if (existingFavorite != null) {
-                            database.deleteFavorite(existingFavorite)
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(this@MainActivity, "Removed from favorites", Toast.LENGTH_SHORT).show()
-                            }
-                        } else {
-                            val favoriteNews = FavoriteNews(
-                                url = article.url,
-                                title = article.title,
-                                description = article.description,
-                                urlToImage = article.urlToImage,
-                                sourceName = article.source.name,
-                                publishedAt = article.publishedAt
-                            )
-                            database.insertFavorite(favoriteNews)
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(this@MainActivity, "Added to favorites", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }
-                }
-            }
-        )
+        adapter = NewsAdapter { article ->
+            // Open article in browser
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(article.url))
+            startActivity(intent)
+        }
         binding.newsRecyclerView.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = this@MainActivity.adapter
@@ -124,6 +99,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadNews() {
-        viewModel.loadNews()
+        try {
+            val interactionId = NewRelic.startInteraction("News Load start")
+            Log.d("NewRelic", "Started News Load interaction with ID: $interactionId")
+            viewModel.loadNews()
+            NewRelic.endInteraction(interactionId)
+            Log.d("NewRelic", "Ended News Load interaction with ID: $interactionId")
+        } catch (e: Exception) {
+            Log.e("NewRelic", "Error tracking News Load interaction", e)
+        }
     }
 } 

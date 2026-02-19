@@ -6,7 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.newsapp.model.NewsArticle
 import com.example.newsapp.repository.NewsRepository
+import com.newrelic.agent.android.NewRelic
 import kotlinx.coroutines.launch
+import java.util.UUID
+
+
 
 class NewsViewModel : ViewModel() {
     private val repository = NewsRepository()
@@ -21,6 +25,7 @@ class NewsViewModel : ViewModel() {
     val error: LiveData<String?> = _error
 
     fun loadNews() {
+
         viewModelScope.launch {
             try {
                 _isLoading.value = true
@@ -33,5 +38,6 @@ class NewsViewModel : ViewModel() {
                 _isLoading.value = false
             }
         }
+        NewRelic.endInteraction("my_interaction")
     }
 } 
