@@ -13,11 +13,23 @@ import com.example.newsapp.adapter.NewsAdapter
 import com.example.newsapp.databinding.ActivityMainBinding
 import com.example.newsapp.viewmodel.NewsViewModel
 import com.newrelic.agent.android.NewRelic
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: NewsViewModel
     private lateinit var adapter: NewsAdapter
+
+    private companion object {
+        private const val SIMULATE_ANR_ON_NEWS_CLICK = false
+        private const val ANR_SLEEP_MS = 120_000L
+
+        private const val SIMULATE_HTTP_ERROR_ON_NEWS_CLICK = true
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,7 +77,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
         adapter = NewsAdapter { article ->
-            // Open article in browser
+            if (SIMULATE_ANR_ON_NEWS_CLICK) {
+                try {
+                    Thread.sleep(ANR_SLEEP_MS)
+                } catch (_: InterruptedException) {
+                    // ignore
+                }
+            }
+            if (SIMULATE_HTTP_ERROR_ON_NEWS_CLICK) {
+                fireRandomHttpError()
+            }
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(article.url))
             startActivity(intent)
         }
@@ -94,6 +115,23 @@ class MainActivity : AppCompatActivity() {
         viewModel.error.observe(this) { error ->
             error?.let {
                 Toast.makeText(this, it, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun fireRandomHttpError() {
+        val statusCode = (400..599).random()
+        val url = "https://httpbin.org/status/$statusCode"
+        Log.d("SimulateHTTP", "Firing request to $url")
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val client = OkHttpClient()
+                val request = Request.Builder().url(url).build()
+                val response = client.newCall(request).execute()
+                Log.d("SimulateHTTP", "Got ${response.code} from $url")
+                response.close()
+            } catch (e: Exception) {
+                Log.e("SimulateHTTP", "Request to $url failed", e)
             }
         }
     }
