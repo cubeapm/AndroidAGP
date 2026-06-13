@@ -120,6 +120,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun fireRandomHttpError() {
+        val test = mutableMapOf<String, Any>()
+        test["percentage"] = 25
+        NewRelic.recordCustomEvent("battery", "indmomey", test)
         val statusCode = (400..599).random()
         val url = "https://httpbin.org/status/$statusCode"
         Log.d("SimulateHTTP", "Firing request to $url")
