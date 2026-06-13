@@ -3,7 +3,6 @@ package com.example.newsapp
 import android.app.Application
 import android.util.Log
 import com.newrelic.agent.android.NewRelic
-//import com.newrelic.agent.android.logging.LogLevel
 
 class NewsApplication : Application() {
     override fun onCreate() {
@@ -15,9 +14,9 @@ class NewsApplication : Application() {
                 .withCrashReportingEnabled(true)
                 .withLogLevel(4)
                 .start(this)
-            Log.d("NewRelic", "NewRelic initialisation successful")
+            Log.d("NewRelic", "NewRelic initialization successful")
         } catch (e: Exception) {
-            Log.e("NewRelic", "Failed to initialise NewRelic", e)
+            Log.e("NewRelic", "Failed to initialize NewRelic", e)
         }
     }
 }
